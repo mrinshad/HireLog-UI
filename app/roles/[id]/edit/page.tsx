@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { createRole, updateRole } from "@/lib/api";
 import { Company, Role } from "@/types";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,6 +97,7 @@ export function RoleForm({ companies, initialData }: RoleFormProps) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <Breadcrumbs items={[{ label: "Roles", href: "/roles" }, { label: "Edit Role" }]} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <Label htmlFor="company_id">Company *</Label>

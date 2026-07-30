@@ -1,9 +1,11 @@
 import { CompanyForm } from "@/components/companies/company-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 
 export default function NewCompanyPage() {
   return (
     <main className="container mx-auto py-10 max-w-2xl">
+      <Breadcrumbs items={[{ label: "Companies", href: "/companies" }, { label: "Add Company" }]} />
       <Card>
         <CardHeader>
           <CardTitle>Add New Company</CardTitle>

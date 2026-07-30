@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { UpdateStatusForm } from "@/components/applications/update-status-form";
 import { CommunicationSection } from "@/components/applications/communication-section";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -65,15 +66,7 @@ export default async function ApplicationDetailsPage({ params }: PageProps) {
     <main className="container mx-auto py-10 max-w-6xl">
       {/* Header */}
       <div className="mb-8">
-        <Link
-          href="/applications"
-          className={buttonVariants({
-            variant: "link",
-            className: "p-0 h-auto mb-4 justify-start",
-          })}
-        >
-          ← Back to Applications
-        </Link>
+        <Breadcrumbs items={[{ label: "Applications", href: "/applications" }, { label: "Application Details" }]} />
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight mb-1">

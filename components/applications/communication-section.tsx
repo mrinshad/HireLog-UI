@@ -4,66 +4,63 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Communication } from "@/types";
 import { createCommunication } from "@/lib/api";
-
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-
-const COMM_TYPES = ["Email", "FollowUp", "Call", "LinkedIn", "Referral", "Other"];
-const DIRECTIONS = ["Sent", "Received"];
+import { Calendar, ChevronDown, ChevronUp, MessageSquare, Plus } from "lucide-react";
 
 interface CommunicationSectionProps {
   applicationId: string;
   communications: Communication[];
 }
 
-export function CommunicationSection({ applicationId, communications }: CommunicationSectionProps) {
+export function CommunicationSection({
+  applicationId,
+  communications,
+}: CommunicationSectionProps) {
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Form state (using simple state here instead of react-hook-form for a quick inline form)
-  const [type, setType] = useState("Email");
-  const [direction, setDirection] = useState("Sent");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [type, setType] = useState("");
+  const [direction, setDirection] = useState("");
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!type || !direction) {
+      toast.info("Please select type and direction");
+      return;
+    }
     setIsSubmitting(true);
-
     try {
       await createCommunication({
         application_id: applicationId,
         type,
         direction,
-        communication_date: new Date(date).toISOString(),
         subject: subject || undefined,
         content: content || undefined,
+        communication_date: new Date(date).toISOString(),
       });
-
-      toast.success("Logged successfully");
-      
-      // Reset form & hide
+      toast.success("Communication logged");
+      setShowForm(false);
+      setType("");
+      setDirection("");
       setSubject("");
       setContent("");
-      setShowForm(false);
-      
-      // Refresh the page data
+      setDate(new Date().toISOString().split("T")[0]);
       router.refresh();
-    } catch (error) {
+    } catch {
       toast.error("Failed to log communication");
     } finally {
       setIsSubmitting(false);
@@ -71,92 +68,133 @@ export function CommunicationSection({ applicationId, communications }: Communic
   }
 
   return (
-    <div className="space-y-6 mt-8">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold tracking-tight">Communications</h2>
-        <Button onClick={() => setShowForm(!showForm)} variant={showForm ? "outline" : "default"}>
-          {showForm ? "Cancel" : "Log Activity"}
-        </Button>
-      </div>
-
-      {showForm && (
-        <Card className="border-primary bg-primary/5">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg">Log New Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>Type</Label>
-                  <Select value={type} onValueChange={(val) => { if (val) setType(val); }}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {COMM_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Direction</Label>
-                  <Select value={direction} onValueChange={(val) => { if (val) setDirection(val); }}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {DIRECTIONS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Date</Label>
-                  <Input type="date" value={date} onChange={e => setDate(e.target.value)} required />
-                </div>
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle>Communications</CardTitle>
+            <CardDescription>
+              {communications.length} communication{communications.length !== 1 ? "s" : ""} logged
+            </CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowForm(!showForm)}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Log
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Add form */}
+        {showForm && (
+          <form onSubmit={handleSubmit} className="space-y-3 border rounded-md p-4 bg-muted/30">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Type *</Label>
+                <Select value={type} onValueChange={setType}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Email">Email</SelectItem>
+                    <SelectItem value="Phone">Phone</SelectItem>
+                    <SelectItem value="LinkedIn">LinkedIn</SelectItem>
+                    <SelectItem value="In-Person">In-Person</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              
-              <div className="space-y-2">
-                <Label>Subject (Optional)</Label>
-                <Input placeholder="e.g. Interview Scheduling" value={subject} onChange={e => setSubject(e.target.value)} />
+              <div className="space-y-1">
+                <Label className="text-xs">Direction *</Label>
+                <Select value={direction} onValueChange={setDirection}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue placeholder="Direction" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Sent">Sent</SelectItem>
+                    <SelectItem value="Received">Received</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              
-              <div className="space-y-2">
-                <Label>Details / Content</Label>
-                <Textarea placeholder="What was said?" value={content} onChange={e => setContent(e.target.value)} />
+              <div className="space-y-1">
+                <Label className="text-xs">Date</Label>
+                <Input type="date" className="h-9 text-sm" value={date} onChange={(e) => setDate(e.target.value)} />
               </div>
-
-              <div className="flex justify-end">
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Saving..." : "Save Log"}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* List of past communications */}
-      <div className="space-y-4">
-        {communications.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No communications logged yet.</p>
-        ) : (
-          communications.map((comm) => (
-            <Card key={comm.id}>
-              <CardContent className="p-4 flex flex-col gap-2">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-2">
-                    <Badge variant={comm.direction === "Sent" ? "default" : "secondary"}>
-                      {comm.direction}
-                    </Badge>
-                    <span className="font-semibold text-sm">{comm.type}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(comm.communication_date).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-                {comm.subject && <div className="font-medium mt-1">{comm.subject}</div>}
-                {comm.content && <div className="text-sm text-muted-foreground whitespace-pre-wrap">{comm.content}</div>}
-              </CardContent>
-            </Card>
-          ))
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Subject</Label>
+              <Input className="h-9 text-sm" placeholder="e.g. Follow-up on interview" value={subject} onChange={(e) => setSubject(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Content</Label>
+              <Textarea className="text-sm resize-none" rows={2} placeholder="Details…" value={content} onChange={(e) => setContent(e.target.value)} />
+            </div>
+            <div className="flex gap-2">
+              <Button type="submit" size="sm" disabled={isSubmitting}>
+                {isSubmitting ? "Saving…" : "Save"}
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
+            </div>
+          </form>
         )}
-      </div>
-    </div>
+
+        {/* Communication list */}
+        {communications.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No communications recorded.</p>
+        ) : (
+          <div className="space-y-2">
+            {communications.map((comm) => {
+              const isExpanded = expandedId === comm.id;
+              return (
+                <div key={comm.id} className="rounded-md border">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedId(isExpanded ? null : comm.id)}
+                    className="flex items-center justify-between w-full p-3 hover:bg-muted/50 transition-colors text-left"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <MessageSquare className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Badge variant="outline" className="text-xs">{comm.type}</Badge>
+                          <Badge variant={comm.direction === "Sent" ? "default" : "secondary"} className="text-xs">
+                            {comm.direction}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {new Date(comm.communication_date).toLocaleDateString()}
+                          </span>
+                        </div>
+                        {comm.subject && (
+                          <p className="text-sm font-medium mt-0.5 truncate">{comm.subject}</p>
+                        )}
+                      </div>
+                    </div>
+                    {isExpanded ? (
+                      <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 ml-2" />
+                    )}
+                  </button>
+                  {isExpanded && (
+                    <div className="px-3 pb-3">
+                      <Separator className="mb-2" />
+                      {comm.content ? (
+                        <p className="text-sm whitespace-pre-wrap text-muted-foreground">{comm.content}</p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground italic">No content recorded.</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

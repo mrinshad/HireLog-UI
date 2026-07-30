@@ -2,6 +2,7 @@ import { getCompany } from "@/lib/api";
 import { CompanyForm } from "@/components/companies/company-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { notFound } from "next/navigation";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -20,6 +21,7 @@ export default async function EditCompanyPage({ params }: PageProps) {
 
   return (
     <main className="container mx-auto py-10 max-w-2xl">
+      <Breadcrumbs items={[{ label: "Companies", href: "/companies" }, { label: "Edit Company" }]} />
       <Card>
         <CardHeader>
           <CardTitle>Edit Company</CardTitle>

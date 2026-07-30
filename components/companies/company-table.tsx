@@ -1,28 +1,80 @@
+"use client";
+
 import { Company } from "@/types";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback } from "react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Pagination } from "@/components/ui/pagination";
 import Link from "next/link";
-import { Eye, ExternalLink } from "lucide-react";
+import { Eye, ExternalLink, Search, X } from "lucide-react";
 
 interface CompanyTableProps {
   companies: Company[];
+  total: number;
+  page: number;
+  perPage: number;
 }
 
-export function CompanyTable({ companies }: CompanyTableProps) {
+export function CompanyTable({ companies, total, page, perPage }: CompanyTableProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const updateParams = useCallback(
+    (updates: Record<string, string>, resetPage = true) => {
+      const params = new URLSearchParams(searchParams.toString());
+      Object.entries(updates).forEach(([k, v]) => {
+        if (v) params.set(k, v);
+        else params.delete(k);
+      });
+      if (resetPage) params.set("page", "1");
+      router.push(`/companies?${params.toString()}`);
+    },
+    [router, searchParams]
+  );
+
+  const clearAll = () => router.push("/companies");
+  const currentSearch = searchParams.get("search") || "";
+  const hasSearch = !!currentSearch;
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Companies Directory</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        {/* Search */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            updateParams({ search: fd.get("search") as string });
+          }}
+          className="flex gap-2"
+        >
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              name="search"
+              placeholder="Search name, recruiter, notes…"
+              defaultValue={currentSearch}
+              className="pl-9 h-9"
+            />
+          </div>
+          <Button type="submit" size="sm" variant="secondary">Search</Button>
+          {hasSearch && (
+            <Button variant="ghost" size="sm" onClick={clearAll} className="h-9">
+              <X className="h-3.5 w-3.5 mr-1" /> Clear
+            </Button>
+          )}
+        </form>
+
+        {/* Table */}
         <Table>
           <TableHeader>
             <TableRow>
@@ -39,7 +91,7 @@ export function CompanyTable({ companies }: CompanyTableProps) {
             {companies.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
-                  No companies tracked yet.
+                  {hasSearch ? "No companies match your search." : "No companies tracked yet."}
                 </TableCell>
               </TableRow>
             ) : (
@@ -80,6 +132,13 @@ export function CompanyTable({ companies }: CompanyTableProps) {
             )}
           </TableBody>
         </Table>
+
+        <Pagination
+          page={page}
+          perPage={perPage}
+          total={total}
+          onPageChange={(p) => updateParams({ page: String(p) }, false)}
+        />
       </CardContent>
     </Card>
   );

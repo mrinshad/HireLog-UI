@@ -3,6 +3,7 @@ import { ApplicationForm } from "@/components/applications/application-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 
 export default async function NewApplicationPage() {
   const [roles, companies] = await Promise.all([
@@ -12,6 +13,7 @@ export default async function NewApplicationPage() {
 
   return (
     <main className="container mx-auto py-10 max-w-3xl">
+      <Breadcrumbs items={[{ label: "Applications", href: "/applications" }, { label: "Track Application" }]} />
       <Card>
         <CardHeader>
           <CardTitle>Track New Application</CardTitle>

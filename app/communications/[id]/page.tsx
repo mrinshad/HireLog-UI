@@ -6,6 +6,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { Calendar, Eye, MessageSquare } from "lucide-react";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -32,15 +33,7 @@ export default async function CommunicationDetailPage({ params }: PageProps) {
   return (
     <main className="container mx-auto py-10 max-w-3xl">
       <div className="mb-8">
-        <Link
-          href="/communications"
-          className={buttonVariants({
-            variant: "link",
-            className: "p-0 h-auto mb-4 justify-start",
-          })}
-        >
-          ← Back to Communications
-        </Link>
+        <Breadcrumbs items={[{ label: "Communications", href: "/communications" }, { label: "Communication Details" }]} />
         <h1 className="text-3xl font-bold tracking-tight mb-1 flex items-center gap-3">
           <MessageSquare className="h-7 w-7 text-primary" />
           Communication Details

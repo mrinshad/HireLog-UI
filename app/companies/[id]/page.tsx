@@ -26,6 +26,7 @@ import {
   User,
   Eye,
 } from "lucide-react";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -74,15 +75,7 @@ export default async function CompanyDetailsPage({ params }: PageProps) {
     <main className="container mx-auto py-10 max-w-6xl">
       {/* Header */}
       <div className="mb-8">
-        <Link
-          href="/companies"
-          className={buttonVariants({
-            variant: "link",
-            className: "p-0 h-auto mb-4 justify-start",
-          })}
-        >
-          ← Back to Companies
-        </Link>
+        <Breadcrumbs items={[{ label: "Companies", href: "/companies" }, { label: "Company Details" }]} />
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight mb-1 flex items-center gap-3">

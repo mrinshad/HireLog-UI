@@ -3,12 +3,14 @@ import { RoleForm } from "@/components/roles/role-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
+import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 
 export default async function NewRolePage() {
   const companies = await getCompanies();
 
   return (
     <main className="container mx-auto py-10 max-w-3xl">
+      <Breadcrumbs items={[{ label: "Roles", href: "/roles" }, { label: "Add Role" }]} />
       <Card>
         <CardHeader>
           <CardTitle>Add New Role</CardTitle>
