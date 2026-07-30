@@ -143,6 +143,16 @@ export async function getCommunications(applicationId: string): Promise<Communic
   return res.json();
 }
 
+export async function getAllCommunications(): Promise<Communication[]> {
+  const authHeaders = await getAuthHeaders();
+  const res = await fetch(`${API_URL}/communications`, {
+    cache: "no-store",
+    headers: { ...authHeaders },
+  });
+  if (!res.ok) throw new Error("Failed to fetch communications");
+  return res.json();
+}
+
 export async function createCommunication(commData: Partial<Communication>): Promise<Communication> {
   const authHeaders = await getAuthHeaders();
   const res = await fetch(`${API_URL}/communications`, {

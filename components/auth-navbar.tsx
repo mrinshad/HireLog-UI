@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Briefcase, Building2, LayoutDashboard, LogOut, Menu, User, X } from "lucide-react";
+import { Briefcase, Building2, LayoutDashboard, LogOut, Menu, MessageSquare, User, X } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,7 @@ const navItems = [
   { name: "Applications", href: "/applications", icon: Briefcase },
   { name: "Roles", href: "/roles", icon: Briefcase },
   { name: "Companies", href: "/companies", icon: Building2 },
+  { name: "Communications", href: "/communications", icon: MessageSquare },
 ];
 
 export function AuthNavbar() {
