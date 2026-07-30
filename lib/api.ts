@@ -78,6 +78,17 @@ export async function getApplications(): Promise<Application[]> {
   return res.json();
 }
 
+export async function getApplication(id: string): Promise<Application | null> {
+  const authHeaders = await getAuthHeaders();
+  const res = await fetch(`${API_URL}/applications/${id}`, {
+    cache: "no-store",
+    headers: { ...authHeaders },
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error("Failed to fetch application");
+  return res.json();
+}
+
 export async function createApplication(appData: Partial<Application>): Promise<Application> {
   const authHeaders = await getAuthHeaders();
   const res = await fetch(`${API_URL}/applications`, {

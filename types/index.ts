@@ -32,6 +32,8 @@ export interface Application {
   applied_date?: string;
   reply_received: boolean;
   last_reply_date?: string;
+  contact_person?: string;
+  contact_info?: string;
   notes?: string;
   created_at: string;
   updated_at: string;
