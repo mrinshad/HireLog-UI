@@ -4,20 +4,13 @@ import { buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
 
 interface CompaniesPageProps {
-  searchParams: Promise<{ page?: string; perPage?: string; search?: string }>;
+  searchParams: Promise<{ page?: string; search?: string }>;
 }
-
-const ALLOWED_PER_PAGE = [10, 20, 50, 100];
-const DEFAULT_PER_PAGE = 20;
 
 export default async function CompaniesPage({ searchParams }: CompaniesPageProps) {
   const params = await searchParams;
   const page = Number(params.page) || 1;
-
-  const requestedPerPage = Number(params.perPage) || DEFAULT_PER_PAGE;
-  const perPage = ALLOWED_PER_PAGE.includes(requestedPerPage)
-    ? requestedPerPage
-    : DEFAULT_PER_PAGE;
+  const perPage = 20;
 
   const result = await getCompaniesPaginated({
     page,
@@ -25,6 +18,7 @@ export default async function CompaniesPage({ searchParams }: CompaniesPageProps
     search: params.search,
   });
 
+  // Backend only returns offset/page_size, so derive the current page from that
   const currentPage = Math.floor(result.offset / result.page_size) + 1;
 
   return (

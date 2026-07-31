@@ -103,8 +103,7 @@ export function CompanyTable({ companies, total, page, perPage }: CompanyTablePr
                   <TableCell className="text-sm">{company.hr_email || "-"}</TableCell>
                   <TableCell>
                     {company.website ? (
-                      <a
-                        href={company.website}
+                      <a href={company.website}
                         target="_blank"
                         rel="noreferrer"
                         className="text-primary hover:underline inline-flex items-center gap-1 text-sm"
@@ -138,6 +137,7 @@ export function CompanyTable({ companies, total, page, perPage }: CompanyTablePr
           perPage={perPage}
           total={total}
           onPageChange={(p) => updateParams({ page: String(p) }, false)}
+          onPerPageChange={(pp) => updateParams({ perPage: String(pp) }, true)}
         />
       </CardContent>
     </Card>

@@ -58,10 +58,3 @@ export interface Communication {
   created_at: string;
   updated_at: string;
 }
-
-export interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  per_page: number;
-}

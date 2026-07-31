@@ -1,4 +1,4 @@
-import { Application, Communication, Company, PaginatedResponse, Role, StatusHistory } from "@/types";
+import { Application, Communication, Company, Role, StatusHistory } from "@/types";
 import { getAuthHeaders } from "@/lib/server-auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
@@ -26,11 +26,37 @@ export async function getCompanies(): Promise<Company[]> {
   return json.data ?? json;
 }
 
-export interface CompanyListParams { page?: number; perPage?: number; search?: string }
-export async function getCompaniesPaginated(params: CompanyListParams): Promise<PaginatedResponse<Company>> {
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  offset: number;
+  page_size: number;
+}
+
+export interface CompanyListParams {
+  page?: number;
+  perPage?: number;
+  search?: string;
+}
+
+export async function getCompaniesPaginated(
+  params: CompanyListParams
+): Promise<PaginatedResponse<Company>> {
   const authHeaders = await getAuthHeaders();
-  const qs = buildParams({ page: params.page ?? 1, per_page: params.perPage ?? 20, search: params.search });
-  const res = await fetch(`${API_URL}/companies?${qs}`, { cache: "no-store", headers: { ...authHeaders } });
+  const page = params.page ?? 1;
+  const pageSize = params.perPage ?? 20;
+  const offset = (page - 1) * pageSize;
+
+  const qs = buildParams({
+    offset,
+    page_size: pageSize,
+    search: params.search,
+  });
+
+  const res = await fetch(`${API_URL}/companies?${qs}`, {
+    cache: "no-store",
+    headers: { ...authHeaders },
+  });
   if (!res.ok) throw new Error("Failed to fetch companies");
   return res.json();
 }
