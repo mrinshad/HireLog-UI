@@ -3,18 +3,26 @@ import { ApplicationTable } from "@/components/applications/application-table";
 import { buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
 
-interface PageProps {
+interface ApplicationsPageProps {
   searchParams: Promise<Record<string, string | undefined>>;
 }
 
-export default async function ApplicationsPage({ searchParams }: PageProps) {
+const ALLOWED_PER_PAGE = [10, 20, 50, 100];
+const DEFAULT_PER_PAGE = 20;
+
+export default async function ApplicationsPage({ searchParams }: ApplicationsPageProps) {
   const params = await searchParams;
   const page = Number(params.page) || 1;
+
+  const requestedPerPage = Number(params.perPage) || DEFAULT_PER_PAGE;
+  const perPage = ALLOWED_PER_PAGE.includes(requestedPerPage)
+    ? requestedPerPage
+    : DEFAULT_PER_PAGE;
 
   const [result, roles, companies] = await Promise.all([
     getApplicationsPaginated({
       page,
-      perPage: 20,
+      perPage,
       search: params.search,
       roleId: params.role_id,
       status: params.status,
@@ -25,6 +33,8 @@ export default async function ApplicationsPage({ searchParams }: PageProps) {
     getRoles(),
     getCompanies(),
   ]);
+
+  const currentPage = Math.floor(result.offset / result.page_size) + 1;
 
   return (
     <main className="container mx-auto py-10 max-w-6xl">
@@ -40,8 +50,8 @@ export default async function ApplicationsPage({ searchParams }: PageProps) {
         roles={roles}
         companies={companies}
         total={result.total}
-        page={result.page}
-        perPage={result.per_page}
+        page={currentPage}
+        perPage={result.page_size}
       />
     </main>
   );

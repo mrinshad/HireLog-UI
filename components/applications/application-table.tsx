@@ -138,7 +138,7 @@ export function ApplicationTable({
               <Label className="text-xs">Status</Label>
               <Select
                 value={searchParams.get("status") || "all"}
-                onValueChange={(v) => updateParams({ status: v === "all" ? "" : v })}
+                onValueChange={(v) => updateParams({ status: v === "all" || !v ? "" : v })}
               >
                 <SelectTrigger className="h-9 text-sm">
                   <SelectValue />
@@ -156,7 +156,7 @@ export function ApplicationTable({
               <Label className="text-xs">Reply</Label>
               <Select
                 value={searchParams.get("reply_received") || "all"}
-                onValueChange={(v) => updateParams({ reply_received: v === "all" ? "" : v })}
+                onValueChange={(v) => updateParams({ reply_received: v === "all" || !v ? "" : v })}
               >
                 <SelectTrigger className="h-9 text-sm">
                   <SelectValue />
@@ -264,6 +264,7 @@ export function ApplicationTable({
           perPage={perPage}
           total={total}
           onPageChange={(p) => updateParams({ page: String(p) }, false)}
+          onPerPageChange={(pp) => updateParams({ perPage: String(pp) }, true)}
         />
       </CardContent>
     </Card>

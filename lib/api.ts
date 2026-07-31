@@ -178,14 +178,30 @@ export interface ApplicationListParams {
   roleId?: string; status?: string; replyReceived?: string;
   updatedFrom?: string; updatedTo?: string;
 }
-export async function getApplicationsPaginated(params: ApplicationListParams): Promise<PaginatedResponse<Application>> {
+
+export async function getApplicationsPaginated(
+  params: ApplicationListParams
+): Promise<PaginatedResponse<Application>> {
   const authHeaders = await getAuthHeaders();
+  const page = params.page ?? 1;
+  const pageSize = params.perPage ?? 20;
+  const offset = (page - 1) * pageSize;
+
   const qs = buildParams({
-    page: params.page ?? 1, per_page: params.perPage ?? 20, search: params.search,
-    role_id: params.roleId, status: params.status, reply_received: params.replyReceived,
-    updated_from: params.updatedFrom, updated_to: params.updatedTo,
+    offset,
+    page_size: pageSize,
+    search: params.search,
+    role_id: params.roleId,
+    status: params.status,
+    reply_received: params.replyReceived,
+    updated_from: params.updatedFrom,
+    updated_to: params.updatedTo,
   });
-  const res = await fetch(`${API_URL}/applications?${qs}`, { cache: "no-store", headers: { ...authHeaders } });
+
+  const res = await fetch(`${API_URL}/applications?${qs}`, {
+    cache: "no-store",
+    headers: { ...authHeaders },
+  });
   if (!res.ok) throw new Error("Failed to fetch applications");
   return res.json();
 }
