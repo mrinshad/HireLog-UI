@@ -9,12 +9,13 @@ interface PageProps {
 
 export default async function RolesPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const page = Number(params.page) || 1;
+  const offset = Number(params.offset) || 0;
+  const pageSize = Number(params.pageSize) || 20;
 
   const [result, companies] = await Promise.all([
     getRolesPaginated({
-      page,
-      perPage: 20,
+      offset,
+      pageSize,
       search: params.search,
       companyId: params.company_id,
       source: params.source,
@@ -37,8 +38,8 @@ export default async function RolesPage({ searchParams }: PageProps) {
         roles={result.data}
         companies={companies}
         total={result.total}
-        page={result.page}
-        perPage={result.per_page}
+        offset={offset}
+        pageSize={pageSize}
       />
     </main>
   );

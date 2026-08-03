@@ -34,8 +34,8 @@ export interface PaginatedResponse<T> {
 }
 
 export interface CompanyListParams {
-  page?: number;
-  perPage?: number;
+  offset?: number;
+  pageSize?: number;
   search?: string;
 }
 
@@ -43,9 +43,8 @@ export async function getCompaniesPaginated(
   params: CompanyListParams
 ): Promise<PaginatedResponse<Company>> {
   const authHeaders = await getAuthHeaders();
-  const page = params.page ?? 1;
-  const pageSize = params.perPage ?? 20;
-  const offset = (page - 1) * pageSize;
+  const offset = params.offset ?? 0;
+  const pageSize = params.pageSize ?? 20;
 
   const qs = buildParams({
     offset,
@@ -109,13 +108,13 @@ export async function getRoles(companyId?: string): Promise<Role[]> {
 }
 
 export interface RoleListParams {
-  page?: number; perPage?: number; search?: string;
+  offset?: number; pageSize?: number; search?: string;
   companyId?: string; source?: string; createdFrom?: string; createdTo?: string;
 }
 export async function getRolesPaginated(params: RoleListParams): Promise<PaginatedResponse<Role>> {
   const authHeaders = await getAuthHeaders();
   const qs = buildParams({
-    page: params.page ?? 1, per_page: params.perPage ?? 20, search: params.search,
+    offset: params.offset ?? 0, page_size: params.pageSize ?? 20, search: params.search,
     company_id: params.companyId, source: params.source,
     created_from: params.createdFrom, created_to: params.createdTo,
   });
@@ -174,7 +173,7 @@ export async function getApplications(): Promise<Application[]> {
 }
 
 export interface ApplicationListParams {
-  page?: number; perPage?: number; search?: string;
+  offset?: number; pageSize?: number; search?: string;
   roleId?: string; status?: string; replyReceived?: string;
   updatedFrom?: string; updatedTo?: string;
 }
@@ -183,9 +182,8 @@ export async function getApplicationsPaginated(
   params: ApplicationListParams
 ): Promise<PaginatedResponse<Application>> {
   const authHeaders = await getAuthHeaders();
-  const page = params.page ?? 1;
-  const pageSize = params.perPage ?? 20;
-  const offset = (page - 1) * pageSize;
+  const offset = params.offset ?? 0;
+  const pageSize = params.pageSize ?? 20;
 
   const qs = buildParams({
     offset,
@@ -273,11 +271,11 @@ export async function getAllCommunications(): Promise<Communication[]> {
   return json.data ?? json;
 }
 
-export interface CommunicationListParams { page?: number; perPage?: number; applicationId?: string }
+export interface CommunicationListParams { offset?: number; pageSize?: number; applicationId?: string }
 export async function getCommunicationsPaginated(params: CommunicationListParams): Promise<PaginatedResponse<Communication>> {
   const authHeaders = await getAuthHeaders();
   const qs = buildParams({
-    page: params.page ?? 1, per_page: params.perPage ?? 20,
+    offset: params.offset ?? 0, page_size: params.pageSize ?? 20,
     application_id: params.applicationId,
   });
   const res = await fetch(`${API_URL}/communications?${qs}`, { cache: "no-store", headers: { ...authHeaders } });

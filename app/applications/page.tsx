@@ -7,22 +7,17 @@ interface ApplicationsPageProps {
   searchParams: Promise<Record<string, string | undefined>>;
 }
 
-const ALLOWED_PER_PAGE = [10, 20, 50, 100];
-const DEFAULT_PER_PAGE = 20;
+const DEFAULT_PAGE_SIZE = 20;
 
 export default async function ApplicationsPage({ searchParams }: ApplicationsPageProps) {
   const params = await searchParams;
-  const page = Number(params.page) || 1;
-
-  const requestedPerPage = Number(params.perPage) || DEFAULT_PER_PAGE;
-  const perPage = ALLOWED_PER_PAGE.includes(requestedPerPage)
-    ? requestedPerPage
-    : DEFAULT_PER_PAGE;
+  const offset = Number(params.offset) || 0;
+  const pageSize = Number(params.pageSize) || DEFAULT_PAGE_SIZE;
 
   const [result, roles, companies] = await Promise.all([
     getApplicationsPaginated({
-      page,
-      perPage,
+      offset,
+      pageSize,
       search: params.search,
       roleId: params.role_id,
       status: params.status,
@@ -34,14 +29,12 @@ export default async function ApplicationsPage({ searchParams }: ApplicationsPag
     getCompanies(),
   ]);
 
-  const currentPage = Math.floor(result.offset / result.page_size) + 1;
-
   return (
     <main className="container mx-auto py-10 max-w-6xl">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold tracking-tight">Applications</h1>
         <Link href="/applications/new" className={buttonVariants({ variant: "default" })}>
-          Track Application
+          New Application
         </Link>
       </div>
 
@@ -50,8 +43,8 @@ export default async function ApplicationsPage({ searchParams }: ApplicationsPag
         roles={roles}
         companies={companies}
         total={result.total}
-        page={currentPage}
-        perPage={result.page_size}
+        offset={offset}
+        pageSize={pageSize}
       />
     </main>
   );

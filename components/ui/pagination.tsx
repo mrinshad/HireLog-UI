@@ -7,32 +7,40 @@ import {
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface PaginationProps {
-  page: number;
-  perPage: number;
+  offset: number;
+  pageSize: number;
   total: number;
-  onPageChange: (page: number) => void;
-  onPerPageChange: (perPage: number) => void;
-  perPageOptions?: number[];
+  onPaginationChange: (offset: number, pageSize: number) => void;
+  pageSizeOptions?: number[];
 }
 
 export function Pagination({
-  page,
-  perPage,
+  offset,
+  pageSize,
   total,
-  onPageChange,
-  onPerPageChange,
-  perPageOptions = [10, 20, 50, 100],
+  onPaginationChange,
+  pageSizeOptions = [10, 20, 50, 100],
 }: PaginationProps) {
-  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  const page = Math.floor(offset / pageSize) + 1;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-  const start = total === 0 ? 0 : (page - 1) * perPage + 1;
-  const end = Math.min(page * perPage, total);
+  const start = total === 0 ? 0 : offset + 1;
+  const end = Math.min(offset + pageSize, total);
 
   const getPages = () => {
     if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
     if (page <= 3) return [1, 2, 3, 4, 5];
     if (page >= totalPages - 2) return [totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
     return [page - 2, page - 1, page, page + 1, page + 2];
+  };
+
+  const handlePageChange = (newPage: number) => {
+    const newOffset = (newPage - 1) * pageSize;
+    onPaginationChange(newOffset, pageSize);
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    onPaginationChange(0, newPageSize); // Reset to first page
   };
 
   return (
@@ -45,14 +53,14 @@ export function Pagination({
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">Rows per page</span>
           <Select
-            value={String(perPage)}
-            onValueChange={(v) => onPerPageChange(Number(v))}
+            value={String(pageSize)}
+            onValueChange={(v) => handlePageSizeChange(Number(v))}
           >
             <SelectTrigger className="h-8 w-[80px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {perPageOptions.map((opt) => (
+              {pageSizeOptions.map((opt) => (
                 <SelectItem key={opt} value={String(opt)}>
                   {opt}
                 </SelectItem>
@@ -69,7 +77,7 @@ export function Pagination({
             size="icon"
             className="h-8 w-8"
             disabled={page <= 1}
-            onClick={() => onPageChange(page - 1)}
+            onClick={() => handlePageChange(page - 1)}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -79,7 +87,7 @@ export function Pagination({
               variant={p === page ? "default" : "outline"}
               size="icon"
               className="h-8 w-8"
-              onClick={() => onPageChange(p)}
+              onClick={() => handlePageChange(p)}
             >
               {p}
             </Button>
@@ -89,7 +97,7 @@ export function Pagination({
             size="icon"
             className="h-8 w-8"
             disabled={page >= totalPages}
-            onClick={() => onPageChange(page + 1)}
+            onClick={() => handlePageChange(page + 1)}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>

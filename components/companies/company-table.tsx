@@ -2,7 +2,8 @@
 
 import { Company } from "@/types";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -17,22 +18,23 @@ import { Eye, ExternalLink, Search, X } from "lucide-react";
 interface CompanyTableProps {
   companies: Company[];
   total: number;
-  page: number;
-  perPage: number;
+  offset: number;
+  pageSize: number;
 }
 
-export function CompanyTable({ companies, total, page, perPage }: CompanyTableProps) {
+export function CompanyTable({ companies, total, offset, pageSize }: CompanyTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
 
   const updateParams = useCallback(
-    (updates: Record<string, string>, resetPage = true) => {
+    (updates: Record<string, string>, resetOffset = true) => {
       const params = new URLSearchParams(searchParams.toString());
       Object.entries(updates).forEach(([k, v]) => {
         if (v) params.set(k, v);
         else params.delete(k);
       });
-      if (resetPage) params.set("page", "1");
+      if (resetOffset) params.set("offset", "0");
       router.push(`/companies?${params.toString()}`);
     },
     [router, searchParams]
@@ -75,9 +77,27 @@ export function CompanyTable({ companies, total, page, perPage }: CompanyTablePr
         </form>
 
         {/* Table */}
+        {selectedRowIds.size > 0 && (
+          <div className="text-sm text-muted-foreground mb-2">
+            {selectedRowIds.size} row(s) selected.
+          </div>
+        )}
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[40px]">
+                <Checkbox
+                  checked={companies.length > 0 && selectedRowIds.size === companies.length}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setSelectedRowIds(new Set(companies.map(c => c.id)));
+                    } else {
+                      setSelectedRowIds(new Set());
+                    }
+                  }}
+                  aria-label="Select all"
+                />
+              </TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Recruiter</TableHead>
@@ -90,13 +110,25 @@ export function CompanyTable({ companies, total, page, perPage }: CompanyTablePr
           <TableBody>
             {companies.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
                   {hasSearch ? "No companies match your search." : "No companies tracked yet."}
                 </TableCell>
               </TableRow>
             ) : (
               companies.map((company) => (
                 <TableRow key={company.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedRowIds.has(company.id)}
+                      onCheckedChange={(checked) => {
+                        const newSet = new Set(selectedRowIds);
+                        if (checked) newSet.add(company.id);
+                        else newSet.delete(company.id);
+                        setSelectedRowIds(newSet);
+                      }}
+                      aria-label={`Select ${company.name}`}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">{company.name}</TableCell>
                   <TableCell>{company.location || "-"}</TableCell>
                   <TableCell className="text-sm">{company.recruiter_name || "-"}</TableCell>
@@ -133,11 +165,10 @@ export function CompanyTable({ companies, total, page, perPage }: CompanyTablePr
         </Table>
 
         <Pagination
-          page={page}
-          perPage={perPage}
+          offset={offset}
+          pageSize={pageSize}
           total={total}
-          onPageChange={(p) => updateParams({ page: String(p) }, false)}
-          onPerPageChange={(pp) => updateParams({ perPage: String(pp) }, true)}
+          onPaginationChange={(newOffset, newPageSize) => updateParams({ offset: String(newOffset), pageSize: String(newPageSize) }, false)}
         />
       </CardContent>
     </Card>

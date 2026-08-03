@@ -2,7 +2,8 @@
 
 import { Application, Role, Company } from "@/types";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -25,8 +26,8 @@ interface ApplicationTableProps {
   roles: Role[];
   companies: Company[];
   total: number;
-  page: number;
-  perPage: number;
+  offset: number;
+  pageSize: number;
 }
 
 const STATUSES = [
@@ -50,19 +51,20 @@ const getStatusColor = (status: string) => {
 };
 
 export function ApplicationTable({
-  applications, roles, companies, total, page, perPage,
+  applications, roles, companies, total, offset, pageSize,
 }: ApplicationTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
 
   const updateParams = useCallback(
-    (updates: Record<string, string>, resetPage = true) => {
+    (updates: Record<string, string>, resetOffset = true) => {
       const params = new URLSearchParams(searchParams.toString());
       Object.entries(updates).forEach(([k, v]) => {
         if (v) params.set(k, v);
         else params.delete(k);
       });
-      if (resetPage) params.set("page", "1");
+      if (resetOffset) params.set("offset", "0");
       router.push(`/applications?${params.toString()}`);
     },
     [router, searchParams]
@@ -198,9 +200,27 @@ export function ApplicationTable({
         </div>
 
         {/* Table */}
+        {selectedRowIds.size > 0 && (
+          <div className="text-sm text-muted-foreground mb-2">
+            {selectedRowIds.size} row(s) selected.
+          </div>
+        )}
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[40px]">
+                <Checkbox
+                  checked={applications.length > 0 && selectedRowIds.size === applications.length}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setSelectedRowIds(new Set(applications.map(a => a.id)));
+                    } else {
+                      setSelectedRowIds(new Set());
+                    }
+                  }}
+                  aria-label="Select all"
+                />
+              </TableHead>
               <TableHead>Company</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Status</TableHead>
@@ -214,7 +234,7 @@ export function ApplicationTable({
           <TableBody>
             {applications.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-6 text-muted-foreground">
                   {hasFilters ? "No applications match your filters." : "No applications tracked yet. Time to apply!"}
                 </TableCell>
               </TableRow>
@@ -223,6 +243,18 @@ export function ApplicationTable({
                 const { roleTitle, companyName } = getJobDetails(app.role_id);
                 return (
                   <TableRow key={app.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedRowIds.has(app.id)}
+                        onCheckedChange={(checked) => {
+                          const newSet = new Set(selectedRowIds);
+                          if (checked) newSet.add(app.id);
+                          else newSet.delete(app.id);
+                          setSelectedRowIds(newSet);
+                        }}
+                        aria-label={`Select ${companyName}`}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">{companyName}</TableCell>
                     <TableCell>{roleTitle}</TableCell>
                     <TableCell>
@@ -260,11 +292,10 @@ export function ApplicationTable({
 
         {/* Pagination */}
         <Pagination
-          page={page}
-          perPage={perPage}
+          offset={offset}
+          pageSize={pageSize}
           total={total}
-          onPageChange={(p) => updateParams({ page: String(p) }, false)}
-          onPerPageChange={(pp) => updateParams({ perPage: String(pp) }, true)}
+          onPaginationChange={(newOffset, newPageSize) => updateParams({ offset: String(newOffset), pageSize: String(newPageSize) }, false)}
         />
       </CardContent>
     </Card>

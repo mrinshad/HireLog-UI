@@ -159,7 +159,7 @@ export function ApplicationForm({ roles, companies, initialData }: ApplicationFo
                 </SelectTrigger>
                 <SelectContent>
                   {roles.map((role) => (
-                    <SelectItem key={role.id} value={role.id}>
+                    <SelectItem key={role.id} value={role.id} label={getRoleLabel(role)}>
                       {getRoleLabel(role)}
                     </SelectItem>
                   ))}

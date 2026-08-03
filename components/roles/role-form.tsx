@@ -109,7 +109,7 @@ export function RoleForm({ companies, initialData }: RoleFormProps) {
                 </SelectTrigger>
                 <SelectContent>
                   {companies.map((company) => (
-                    <SelectItem key={company.id} value={company.id}>
+                    <SelectItem key={company.id} value={company.id} label={company.name}>
                       {company.name}
                     </SelectItem>
                   ))}
@@ -142,7 +142,25 @@ export function RoleForm({ companies, initialData }: RoleFormProps) {
 
         <div className="space-y-2">
           <Label htmlFor="source">Source</Label>
-          <Input id="source" placeholder="e.g. LinkedIn, Referral" {...register("source")} />
+          <Controller
+            control={control}
+            name="source"
+            render={({ field }) => (
+              <Select onValueChange={(val) => field.onChange(val)} defaultValue={field.value || undefined}>
+                <SelectTrigger id="source">
+                  <SelectValue placeholder="Select a source" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="LinkedIn">LinkedIn</SelectItem>
+                  <SelectItem value="Company Website">Company Website</SelectItem>
+                  <SelectItem value="Referral">Referral</SelectItem>
+                  <SelectItem value="Indeed">Indeed</SelectItem>
+                  <SelectItem value="Wellfound">Wellfound</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
         </div>
       </div>
 

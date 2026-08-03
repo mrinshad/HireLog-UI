@@ -2,7 +2,8 @@
 
 import { Communication, Application, Role, Company } from "@/types";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -19,23 +20,25 @@ interface CommunicationTableProps {
   roles: Role[];
   companies: Company[];
   total: number;
-  page: number;
-  perPage: number;
+  offset: number;
+  pageSize: number;
 }
 
 export function CommunicationTable({
-  communications, applications, roles, companies, total, page, perPage,
+  communications, applications, roles, companies, total, offset, pageSize,
 }: CommunicationTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
 
   const updateParams = useCallback(
-    (updates: Record<string, string>) => {
+    (updates: Record<string, string>, resetOffset = true) => {
       const params = new URLSearchParams(searchParams.toString());
       Object.entries(updates).forEach(([k, v]) => {
         if (v) params.set(k, v);
         else params.delete(k);
       });
+      if (resetOffset) params.set("offset", "0");
       router.push(`/communications?${params.toString()}`);
     },
     [router, searchParams]
@@ -55,9 +58,27 @@ export function CommunicationTable({
         <CardTitle>All Communications</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {selectedRowIds.size > 0 && (
+          <div className="text-sm text-muted-foreground mb-2">
+            {selectedRowIds.size} row(s) selected.
+          </div>
+        )}
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[40px]">
+                <Checkbox
+                  checked={communications.length > 0 && selectedRowIds.size === communications.length}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setSelectedRowIds(new Set(communications.map(c => c.id)));
+                    } else {
+                      setSelectedRowIds(new Set());
+                    }
+                  }}
+                  aria-label="Select all"
+                />
+              </TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Direction</TableHead>
@@ -70,7 +91,7 @@ export function CommunicationTable({
           <TableBody>
             {communications.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
                   No communications logged yet.
                 </TableCell>
               </TableRow>
@@ -79,6 +100,18 @@ export function CommunicationTable({
                 const { roleTitle, companyName } = getAppDetails(comm.application_id);
                 return (
                   <TableRow key={comm.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedRowIds.has(comm.id)}
+                        onCheckedChange={(checked) => {
+                          const newSet = new Set(selectedRowIds);
+                          if (checked) newSet.add(comm.id);
+                          else newSet.delete(comm.id);
+                          setSelectedRowIds(newSet);
+                        }}
+                        aria-label={`Select communication`}
+                      />
+                    </TableCell>
                     <TableCell className="text-sm">
                       {new Date(comm.communication_date).toLocaleDateString()}
                     </TableCell>
@@ -112,10 +145,10 @@ export function CommunicationTable({
         </Table>
 
         <Pagination
-          page={page}
-          perPage={perPage}
+          offset={offset}
+          pageSize={pageSize}
           total={total}
-          onPageChange={(p) => updateParams({ page: String(p) })}
+          onPaginationChange={(newOffset, newPageSize) => updateParams({ offset: String(newOffset), pageSize: String(newPageSize) }, false)}
         />
       </CardContent>
     </Card>

@@ -7,10 +7,11 @@ interface PageProps {
 
 export default async function CommunicationsPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const page = Number(params.page) || 1;
+  const offset = Number(params.offset) || 0;
+  const pageSize = Number(params.pageSize) || 20;
 
   const [result, applications, roles, companies] = await Promise.all([
-    getCommunicationsPaginated({ page, perPage: 20 }),
+    getCommunicationsPaginated({ offset, pageSize }),
     getApplications(),
     getRoles(),
     getCompanies(),
@@ -28,8 +29,8 @@ export default async function CommunicationsPage({ searchParams }: PageProps) {
         roles={roles}
         companies={companies}
         total={result.total}
-        page={result.page}
-        perPage={result.per_page}
+        offset={offset}
+        pageSize={pageSize}
       />
     </main>
   );

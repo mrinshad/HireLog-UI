@@ -4,28 +4,21 @@ import { buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
 
 interface CompaniesPageProps {
-  searchParams: Promise<{ page?: string; perPage?: string; search?: string }>;
+  searchParams: Promise<Record<string, string | undefined>>;
 }
 
-const ALLOWED_PER_PAGE = [10, 20, 50, 100];
-const DEFAULT_PER_PAGE = 20;
+const DEFAULT_PAGE_SIZE = 20;
 
 export default async function CompaniesPage({ searchParams }: CompaniesPageProps) {
   const params = await searchParams;
-  const page = Number(params.page) || 1;
-
-  const requestedPerPage = Number(params.perPage) || DEFAULT_PER_PAGE;
-  const perPage = ALLOWED_PER_PAGE.includes(requestedPerPage)
-    ? requestedPerPage
-    : DEFAULT_PER_PAGE;
+  const offset = Number(params.offset) || 0;
+  const pageSize = Number(params.pageSize) || DEFAULT_PAGE_SIZE;
 
   const result = await getCompaniesPaginated({
-    page,
-    perPage,
+    offset,
+    pageSize,
     search: params.search,
   });
-
-  const currentPage = Math.floor(result.offset / result.page_size) + 1;
 
   return (
     <main className="container mx-auto py-10 max-w-6xl">
@@ -39,8 +32,8 @@ export default async function CompaniesPage({ searchParams }: CompaniesPageProps
       <CompanyTable
         companies={result.data}
         total={result.total}
-        page={currentPage}
-        perPage={result.page_size}
+        offset={offset}
+        pageSize={pageSize}
       />
     </main>
   );

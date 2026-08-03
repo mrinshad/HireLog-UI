@@ -11,6 +11,7 @@ import {
   Target,
   Inbox,
   BarChart3,
+  Calendar,
 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,8 +30,10 @@ import {
   getDashboardStats,
   getPipelineCounts,
   getApplications,
+  getApplicationsPaginated,
   getRoles,
   getCompanies,
+  getCommunicationsPaginated,
 } from "@/lib/api";
 
 const statusStyles: Record<string, string> = {
@@ -113,24 +116,44 @@ export default function DashboardPage() {
         <StatsSection />
       </Suspense>
 
-      {/* Two Column Layout (Recent Apps & Sidebar) */}
+      {/* Main Content Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-        {/* Left Column: Recent Applications */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold tracking-tight">Recent Activity</h2>
-            <Link
-              href="/applications"
-              className={buttonVariants({ variant: "ghost", size: "sm", className: "gap-1" })}
-            >
-              View all
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+        {/* Left Column */}
+        <div className="lg:col-span-2 space-y-8">
+          
+          {/* Follow-up Applications */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold tracking-tight">Follow-up Applications</h2>
+              <Link
+                href="/applications/follow-up"
+                className={buttonVariants({ variant: "ghost", size: "sm", className: "gap-1" })}
+              >
+                More
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <Suspense fallback={<RecentApplicationsSkeleton />}>
+              <FollowUpApplicationsSection />
+            </Suspense>
           </div>
 
-          <Suspense fallback={<RecentApplicationsSkeleton />}>
-            <RecentApplicationsSection />
-          </Suspense>
+          {/* Recent Applications */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold tracking-tight">Recent Activity</h2>
+              <Link
+                href="/applications"
+                className={buttonVariants({ variant: "ghost", size: "sm", className: "gap-1" })}
+              >
+                View all
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <Suspense fallback={<RecentApplicationsSkeleton />}>
+              <RecentApplicationsSection />
+            </Suspense>
+          </div>
         </div>
 
         {/* Right Column: Sidebar Actions & Pipeline */}
@@ -140,6 +163,23 @@ export default function DashboardPage() {
             <h2 className="text-lg font-semibold tracking-tight">Pipeline Status</h2>
             <Suspense fallback={<PipelineSkeleton />}>
               <PipelineSection />
+            </Suspense>
+          </div>
+
+          {/* Recent Communications */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold tracking-tight">Recent Communications</h2>
+              <Link
+                href="/communications"
+                className={buttonVariants({ variant: "ghost", size: "sm", className: "gap-1" })}
+              >
+                More
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <Suspense fallback={<RecentCommunicationsSkeleton />}>
+              <RecentCommunicationsSection />
             </Suspense>
           </div>
         </div>
@@ -427,6 +467,152 @@ function PipelineSkeleton() {
             <Skeleton className="h-2 w-full rounded-full" />
           </div>
         ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Follow Up Applications                                                     */
+/* -------------------------------------------------------------------------- */
+
+async function FollowUpApplicationsSection() {
+  const [result, roles, companies] = await Promise.all([
+    getApplicationsPaginated({
+      offset: 0,
+      pageSize: 5,
+      status: "Applied,Screening,Interview,Offer",
+    }),
+    getRoles(),
+    getCompanies(),
+  ]);
+
+  const followUpApplications = result.data;
+
+  return (
+    <Card className={cn(enter, "delay-100")}>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Company</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="hidden sm:table-cell text-right">Last Updated</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {followUpApplications.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} className="py-8">
+                  <div className="flex flex-col items-center justify-center gap-2 text-center">
+                    <p className="text-sm font-medium">No follow-up applications</p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              followUpApplications.map((app, i) => {
+                const role = roles.find((r) => r.id === app.role_id);
+                const company = role ? companies.find((c) => c.id === role.company_id) : null;
+
+                return (
+                  <TableRow
+                    key={app.id}
+                    className={cn(enter, "hover:bg-muted/40 transition-colors")}
+                    style={{ animationDelay: `${i * 40}ms` }}
+                  >
+                    <TableCell className="font-medium whitespace-nowrap">
+                      {company?.name || "Unknown company"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground min-w-[150px]">
+                      {role?.title || "Unknown role"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={cn("font-medium", statusStyles[app.status] || statusStyles.Interested)}>
+                        {app.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground hidden sm:table-cell text-right whitespace-nowrap">
+                      <span className="flex items-center justify-end gap-1.5">
+                        <Clock className="h-3.5 w-3.5" />
+                        {new Date(app.updated_at).toLocaleDateString()}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </Card>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Recent Communications                                                      */
+/* -------------------------------------------------------------------------- */
+
+async function RecentCommunicationsSection() {
+  const result = await getCommunicationsPaginated({ offset: 0, pageSize: 5 });
+  const communications = result.data;
+
+  return (
+    <Card className={cn(enter, "delay-200")}>
+      <CardContent className="p-0">
+        <Table>
+          <TableBody>
+            {communications.length === 0 ? (
+              <TableRow>
+                <TableCell className="py-8 text-center text-sm text-muted-foreground">
+                  No communications logged.
+                </TableCell>
+              </TableRow>
+            ) : (
+              communications.map((comm) => (
+                <TableRow key={comm.id}>
+                  <TableCell>
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-sm truncate max-w-[180px]">
+                        {comm.subject || comm.type}
+                      </span>
+                      <Badge variant={comm.direction === "Sent" ? "default" : "secondary"} className="text-xs">
+                        {comm.direction}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                      <Calendar className="h-3 w-3" />
+                      {new Date(comm.communication_date).toLocaleDateString()}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+}
+
+function RecentCommunicationsSkeleton() {
+  return (
+    <Card>
+      <CardContent className="p-0">
+        <Table>
+          <TableBody>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <TableRow key={i}>
+                <TableCell className="py-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );

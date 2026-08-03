@@ -94,22 +94,23 @@ export function CommunicationSection({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Type *</Label>
-                <Select value={type} onValueChange={setType}>
+                <Select value={type} onValueChange={(val) => { if (val) setType(val); }}>
                   <SelectTrigger className="h-9 text-sm">
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Email">Email</SelectItem>
                     <SelectItem value="Phone">Phone</SelectItem>
-                    <SelectItem value="LinkedIn">LinkedIn</SelectItem>
-                    <SelectItem value="In-Person">In-Person</SelectItem>
+                    <SelectItem value="Video Call">Video Call</SelectItem>
+                    <SelectItem value="In-person">In-person</SelectItem>
+                    <SelectItem value="LinkedIn Message">LinkedIn Message</SelectItem>
                     <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Direction *</Label>
-                <Select value={direction} onValueChange={setDirection}>
+                <Select value={direction} onValueChange={(val) => { if (val) setDirection(val); }}>
                   <SelectTrigger className="h-9 text-sm">
                     <SelectValue placeholder="Direction" />
                   </SelectTrigger>

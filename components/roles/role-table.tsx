@@ -2,7 +2,8 @@
 
 import { Role, Company } from "@/types";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -18,22 +19,23 @@ interface RoleTableProps {
   roles: Role[];
   companies: Company[];
   total: number;
-  page: number;
-  perPage: number;
+  offset: number;
+  pageSize: number;
 }
 
-export function RoleTable({ roles, companies, total, page, perPage }: RoleTableProps) {
+export function RoleTable({ roles, companies, total, offset, pageSize }: RoleTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
 
   const updateParams = useCallback(
-    (updates: Record<string, string>, resetPage = true) => {
+    (updates: Record<string, string>, resetOffset = true) => {
       const params = new URLSearchParams(searchParams.toString());
       Object.entries(updates).forEach(([k, v]) => {
         if (v) params.set(k, v);
         else params.delete(k);
       });
-      if (resetPage) params.set("page", "1");
+      if (resetOffset) params.set("offset", "0");
       router.push(`/roles?${params.toString()}`);
     },
     [router, searchParams]
@@ -141,9 +143,27 @@ export function RoleTable({ roles, companies, total, page, perPage }: RoleTableP
         </div>
 
         {/* Table */}
+        {selectedRowIds.size > 0 && (
+          <div className="text-sm text-muted-foreground mb-2">
+            {selectedRowIds.size} row(s) selected.
+          </div>
+        )}
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[40px]">
+                <Checkbox
+                  checked={roles.length > 0 && selectedRowIds.size === roles.length}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      setSelectedRowIds(new Set(roles.map(r => r.id)));
+                    } else {
+                      setSelectedRowIds(new Set());
+                    }
+                  }}
+                  aria-label="Select all"
+                />
+              </TableHead>
               <TableHead>Role Title</TableHead>
               <TableHead>Company</TableHead>
               <TableHead>Location</TableHead>
@@ -154,13 +174,25 @@ export function RoleTable({ roles, companies, total, page, perPage }: RoleTableP
           <TableBody>
             {roles.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
                   {hasFilters ? "No roles match your filters." : "No roles tracked yet."}
                 </TableCell>
               </TableRow>
             ) : (
               roles.map((role) => (
                 <TableRow key={role.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedRowIds.has(role.id)}
+                      onCheckedChange={(checked) => {
+                        const newSet = new Set(selectedRowIds);
+                        if (checked) newSet.add(role.id);
+                        else newSet.delete(role.id);
+                        setSelectedRowIds(newSet);
+                      }}
+                      aria-label={`Select ${role.title}`}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">
                     {role.job_url ? (
                       <a href={role.job_url} target="_blank" rel="noreferrer" className="text-primary hover:underline">
@@ -183,10 +215,10 @@ export function RoleTable({ roles, companies, total, page, perPage }: RoleTableP
         </Table>
 
         <Pagination
-          page={page}
-          perPage={perPage}
+          offset={offset}
+          pageSize={pageSize}
           total={total}
-          onPageChange={(p) => updateParams({ page: String(p) }, false)}
+          onPaginationChange={(newOffset, newPageSize) => updateParams({ offset: String(newOffset), pageSize: String(newPageSize) }, false)}
         />
       </CardContent>
     </Card>
